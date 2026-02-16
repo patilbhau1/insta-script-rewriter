@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}View Script - Script Rewriter{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="script-view-header">
+        <a href="{{ url_for('history') }}" class="back-link">← Back to History</a>
+        <div class="script-actions">
+            <button onclick="copyToClipboard('{{ script.id }}')" class="btn-secondary">📋 Copy Script</button>
+            <button onclick="exportScript('{{ script.id }}')" class="btn-secondary">💾 Export</button>
+            <button onclick="deleteScript('{{ script.id }}')" class="btn-danger">🗑️ Delete</button>
+        </div>
+    </div>
+
+    <div class="script-meta">
+        <span class="meta-badge {% if script.source_type == 'instagram' %}badge-instagram{% else %}badge-upload{% endif %}">
+            {% if script.source_type == 'instagram' %}📱 Instagram{% else %}📂 File Upload{% endif %}
+        </span>
+        <span class="meta-date">{{ script.timestamp[:19].replace('T', ' ') }}</span>
+    </div>
+
+    <div class="result-card">
+        <h2>🏢 Brand Information</h2>
+        <div class="result-content">{{ script.brand_input }}</div>
+    </div>
+
+    <div class="result-card">
+        <h2>📝 Original Transcription</h2>
+        <div class="result-content">{{ script.transcription }}</div>
+        <div class="result-stats">{{ script.transcription_length }} characters</div>
+    </div>
+
+    <div class="result-card">
+        <h2>🎯 Video Style Analysis</h2>
+        <div class="result-content">{{ script.style_analysis }}</div>
+    </div>
+
+    <div class="result-card highlight">
+        <h2>✨ Your Custom Script</h2>
+        <div class="result-content" id="scriptContent">{{ script.rewritten_script }}</div>
+        <div class="result-stats">{{ script.script_length }} characters</div>
+        <button class="btn-secondary" id="copyBtn" onclick="copyScript()">
+            <span>📋 Copy Script</span>
+        </button>
+    </div>
+</div>
+
+<script>
+function copyScript() {
+    const text = document.getElementById('scriptContent').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.innerHTML = '<span>✓ Copied!</span>';
+        btn.style.background = '#10b981';
+        btn.style.color = 'white';
+        setTimeout(() => {
+            btn.innerHTML = '<span>📋 Copy Script</span>';
+            btn.style.background = '';
+            btn.style.color = '';
+        }, 2000);
+    });
+}
+
+function deleteScript(scriptId) {
+    if (confirm('Are you sure you want to delete this script?')) {
+        fetch(`/api/script/${scriptId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '{{ url_for("history") }}';
+                }
+            });
+    }
+}
+
+function exportScript(scriptId) {
+    window.location.href = `/api/script/${scriptId}/export`;
+}
+</script>
+{% endblock %}

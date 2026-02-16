@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Library - Script Rewriter{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1>📚 Script Library</h1>
+        <p class="subtitle">Organized collection of your generated scripts</p>
+    </header>
+
+    <!-- Search and Filter -->
+    <div class="library-toolbar">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search scripts...">
+        <select id="filterSelect" class="filter-select">
+            <option value="all">All Sources</option>
+            <option value="instagram">Instagram Only</option>
+            <option value="upload">Uploads Only</option>
+        </select>
+        <select id="sortSelect" class="filter-select">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="longest">Longest Script</option>
+        </select>
+    </div>
+
+    {% if scripts %}
+    <div class="library-grid" id="libraryGrid">
+        {% for script in scripts %}
+        <div class="library-item" data-source="{{ script.source_type }}" data-timestamp="{{ script.timestamp }}" data-length="{{ script.script_length }}">
+            <div class="library-item-header">
+                <span class="library-badge {% if script.source_type == 'instagram' %}badge-instagram{% else %}badge-upload{% endif %}">
+                    {% if script.source_type == 'instagram' %}📱{% else %}📂{% endif %}
+                </span>
+                <div class="library-item-menu">
+                    <button class="menu-btn" onclick="toggleMenu(this)">⋮</button>
+                    <div class="menu-dropdown">
+                        <a href="{{ url_for('view_script', script_id=script.id) }}">View</a>
+                        <a href="#" onclick="copyScript('{{ script.id }}')">Copy</a>
+                        <a href="#" onclick="exportScript('{{ script.id }}')">Export</a>
+                        <a href="#" onclick="deleteScript('{{ script.id }}')">Delete</a>
+                    </div>
+                </div>
+            </div>
+            <div class="library-item-body">
+                <h3 class="library-title">{{ script.brand_input[:40] }}{% if script.brand_input|length > 40 %}...{% endif %}</h3>
+                <p class="library-date">{{ script.timestamp[:19].replace('T', ' ') }}</p>
+                <div class="library-stats">
+                    <span>📝 {{ script.transcription_length }} chars</span>
+                    <span>✨ {{ script.script_length }} chars</span>
+                </div>
+                <p class="library-preview">{{ script.rewritten_script[:120] }}...</p>
+            </div>
+            <div class="library-item-footer">
+                <a href="{{ url_for('view_script', script_id=script.id) }}" class="btn-view">View Full Script →</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📚</div>
+        <h3>Your Library is Empty</h3>
+        <p>Start generating scripts to build your library!</p>
+        <a href="{{ url_for('index') }}" class="btn-primary">Generate First Script</a>
+    </div>
+    {% endif %}
+</div>
+
+<script src="{{ url_for('static', filename='js/library.js') }}"></script>
+{% endblock %}

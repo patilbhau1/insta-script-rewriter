@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}History - Script Rewriter{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1>📜 History</h1>
+        <p class="subtitle">Browse all your generated scripts</p>
+    </header>
+
+    {% if scripts %}
+    <div class="history-grid">
+        {% for script in scripts %}
+        <div class="history-card">
+            <div class="history-header">
+                <span class="history-badge {% if script.source_type == 'instagram' %}badge-instagram{% else %}badge-upload{% endif %}">
+                    {% if script.source_type == 'instagram' %}📱 Instagram{% else %}📂 Upload{% endif %}
+                </span>
+                <span class="history-date">{{ script.timestamp[:10] }}</span>
+            </div>
+            <div class="history-body">
+                <h3>{{ script.brand_input[:50] }}{% if script.brand_input|length > 50 %}...{% endif %}</h3>
+                <p class="history-stats">
+                    📝 {{ script.transcription_length }} chars transcribed • 
+                    ✨ {{ script.script_length }} chars generated
+                </p>
+                <p class="history-preview">{{ script.style_analysis[:100] }}...</p>
+            </div>
+            <div class="history-footer">
+                <a href="{{ url_for('view_script', script_id=script.id) }}" class="btn-small btn-primary">View Details</a>
+                <button onclick="deleteScript('{{ script.id }}')" class="btn-small btn-danger">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <h3>No Scripts Yet</h3>
+        <p>Generate your first script to see it here!</p>
+        <a href="{{ url_for('index') }}" class="btn-primary">Generate Script</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function deleteScript(scriptId) {
+    if (!confirm('Are you sure you want to delete this script?')) return;
+    
+    try {
+        const response = await fetch(`/api/script/${scriptId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            location.reload();
+        } else {
+            alert('Failed to delete script');
+        }
+    } catch (error) {
+        alert('Error deleting script');
+    }
+}
+</script>
+{% endblock %}

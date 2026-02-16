@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Instagram Script Rewriter{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="nav-brand">
+                🎬 Script Rewriter
+            </a>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    📊 Dashboard
+                </a></li>
+                <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    ✨ Generate
+                </a></li>
+                <li><a href="{{ url_for('history') }}" class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">
+                    📜 History
+                </a></li>
+                <li><a href="{{ url_for('analytics') }}" class="nav-link {% if request.endpoint == 'analytics' %}active{% endif %}">
+                    📈 Analytics
+                </a></li>
+                <li><a href="{{ url_for('library') }}" class="nav-link {% if request.endpoint == 'library' %}active{% endif %}">
+                    📚 Library
+                </a></li>
+                <li><a href="{{ url_for('settings') }}" class="nav-link {% if request.endpoint == 'settings' %}active{% endif %}">
+                    ⚙️ Settings
+                </a></li>
+            </ul>
+            
+            <!-- User Account Section -->
+            <div class="user-section">
+                {% if user and not user.is_guest %}
+                    <div class="user-menu">
+                        <button class="user-button" id="userMenuBtn">
+                            <span class="user-icon">👤</span>
+                            <span class="user-email">{{ user.email }}</span>
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-item user-info">
+                                <strong>{{ user.email }}</strong>
+                                <small>Registered User</small>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" onclick="handleLogout()">
+                                <span>🚪</span> Logout
+                            </button>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="auth-buttons">
+                        {% if user and user.is_guest %}
+                            <span class="guest-badge">👤 Guest</span>
+                        {% endif %}
+                        <button class="btn-auth btn-login" onclick="showLoginModal()">Login</button>
+                        <button class="btn-auth btn-signup" onclick="showSignupModal()">Sign Up</button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <span class="auth-modal-close" onclick="closeLoginModal()">&times;</span>
+            <h2>🔐 Login</h2>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" name="password" required placeholder="••••••••">
+                </div>
+                <div id="loginError" class="error-message"></div>
+                <button type="submit" class="btn-auth-submit">Login</button>
+                <p class="auth-switch">
+                    Don't have an account? <a href="#" onclick="switchToSignup()">Sign up</a>
+                </p>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Signup Modal -->
+    <div id="signupModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <span class="auth-modal-close" onclick="closeSignupModal()">&times;</span>
+            <h2>📝 Sign Up</h2>
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" name="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" name="password" required placeholder="At least 6 characters">
+                    <small>Password must be at least 6 characters long</small>
+                </div>
+                <div class="form-group">
+                    <label for="signupPasswordConfirm">Confirm Password</label>
+                    <input type="password" id="signupPasswordConfirm" name="passwordConfirm" required placeholder="••••••••">
+                </div>
+                <div id="signupError" class="error-message"></div>
+                <button type="submit" class="btn-auth-submit">Sign Up</button>
+                <p class="auth-switch">
+                    Already have an account? <a href="#" onclick="switchToLogin()">Login</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="page-wrapper">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <p>Powered by Groq AI • Whisper + LLaMA 3.3</p>
+            <p class="footer-links">
+                <a href="{{ url_for('index') }}">Generate</a> •
+                <a href="{{ url_for('history') }}">History</a> •
+                <a href="{{ url_for('analytics') }}">Analytics</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Global Scripts -->
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

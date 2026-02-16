@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Script - Script Rewriter{% endblock %}
+
+{% block extra_css %}
+<style>
+.progress-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-modal.active {
+    display: flex;
+}
+
+.progress-content {
+    background: white;
+    border-radius: 1rem;
+    padding: 2.5rem;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.progress-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.progress-steps {
+    margin: 2rem 0;
+}
+
+.progress-step {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    transition: all 0.3s;
+}
+
+.progress-step.active {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+.progress-step.completed {
+    background: #f0fdf4;
+    border-left: 4px solid #10b981;
+}
+
+.step-icon {
+    font-size: 2rem;
+    margin-right: 1rem;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.step-status {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.step-loader {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.progress-bar-container {
+    background: #e5e7eb;
+    border-radius: 1rem;
+    height: 8px;
+    margin: 2rem 0;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    transition: width 0.5s ease;
+    border-radius: 1rem;
+}
+
+.progress-percentage {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #3b82f6;
+    margin: 1rem 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1>✨ Generate Script</h1>
+        <p class="subtitle">Transform Instagram videos into custom scripts for your brand</p>
+    </header>
+
+    <main>
+        <div class="upload-section">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="instagram_url">
+                        <span class="label-text">📱 Instagram Link (Recommended)</span>
+                        <span class="label-hint">Paste Instagram post or reel URL</span>
+                    </label>
+                    <input 
+                        type="url" 
+                        id="instagram_url" 
+                        name="instagram_url" 
+                        placeholder="https://www.instagram.com/reel/..."
+                        class="url-input"
+                    >
+                </div>
+
+                <div class="separator">
+                    <span class="separator-text">OR</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="video">
+                        <span class="label-text">📂 Upload Video File</span>
+                        <span class="label-hint">MP4, MOV, AVI, MKV, or WEBM (max 100MB)</span>
+                    </label>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="video" name="video" accept="video/*">
+                        <div class="file-input-display">
+                            <span class="file-icon">📁</span>
+                            <span class="file-text">Choose a video file...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="brand_input">
+                        <span class="label-text">Your Brand Information</span>
+                        <span class="label-hint">Enter website URL to auto-fill or write brand description manually</span>
+                    </label>
+                    <div class="brand-input-wrapper">
+                        <input 
+                            type="text" 
+                            id="website_url" 
+                            class="url-input" 
+                            placeholder="mycompany.com or https://mycompany.com"
+                        >
+                        <button type="button" class="btn-scrape" id="scrapeBtn">
+                            <span id="scrapeBtnText">🔍 Auto-Fill from Website</span>
+                        </button>
+                    </div>
+                    <textarea 
+                        id="brand_input" 
+                        name="brand_input" 
+                        rows="6" 
+                        placeholder="Brand info will appear here after scraping, or type your brand description manually..."
+                        required
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <span class="btn-text">Analyze & Generate Script</span>
+                    <span class="btn-icon">✨</span>
+                </button>
+            </form>
+        </div>
+
+        <div id="errorSection" class="error-section hidden">
+            <div class="error-icon">⚠️</div>
+            <p class="error-text"></p>
+        </div>
+
+        <div id="resultsSection" class="results-section hidden">
+            <div class="result-card">
+                <h2>📝 Original Transcription</h2>
+                <div class="result-content" id="transcriptionContent"></div>
+            </div>
+
+            <div class="result-card">
+                <h2>🎯 Video Style Analysis</h2>
+                <div class="result-content" id="styleContent"></div>
+            </div>
+
+            <div class="result-card highlight">
+                <h2>✨ Your Custom Script</h2>
+                <div class="result-content" id="scriptContent"></div>
+                <button class="btn-secondary" id="copyBtn">
+                    <span>📋 Copy Script</span>
+                </button>
+            </div>
+
+            <button class="btn-primary" id="resetBtn">
+                <span>🔄 Create Another Script</span>
+            </button>
+        </div>
+    </main>
+</div>
+
+<!-- Real-time Progress Modal -->
+<div id="progressModal" class="progress-modal">
+    <div class="progress-content">
+        <div class="progress-header">
+            <h2>🎬 Processing Your Video</h2>
+            <p>This may take 1-2 minutes</p>
+        </div>
+
+        <div class="progress-percentage" id="progressPercent">0%</div>
+        
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+
+        <div class="progress-steps">
+            <div class="progress-step" id="step1">
+                <div class="step-icon">📥</div>
+                <div class="step-content">
+                    <div class="step-title">Downloading Video</div>
+                    <div class="step-status">Waiting...</div>
+                </div>
+                <div class="step-loader" style="display: none;"></div>
+            </div>
+
+            <div class="progress-step" id="step2">
+                <div class="step-icon">🎵</div>
+                <div class="step-content">
+                    <div class="step-title">Extracting Audio</div>
+                    <div class="step-status">Waiting...</div>
+                </div>
+                <div class="step-loader" style="display: none;"></div>
+            </div>
+
+            <div class="progress-step" id="step3">
+                <div class="step-icon">🎙️</div>
+                <div class="step-content">
+                    <div class="step-title">Transcribing with Whisper</div>
+                    <div class="step-status">Waiting...</div>
+                </div>
+                <div class="step-loader" style="display: none;"></div>
+            </div>
+
+            <div class="progress-step" id="step4">
+                <div class="step-icon">🤖</div>
+                <div class="step-content">
+                    <div class="step-title">Analyzing Style</div>
+                    <div class="step-status">Waiting...</div>
+                </div>
+                <div class="step-loader" style="display: none;"></div>
+            </div>
+
+            <div class="progress-step" id="step5">
+                <div class="step-icon">✨</div>
+                <div class="step-content">
+                    <div class="step-title">Generating Custom Script</div>
+                    <div class="step-status">Waiting...</div>
+                </div>
+                <div class="step-loader" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/generate.js') }}"></script>
+{% endblock %}

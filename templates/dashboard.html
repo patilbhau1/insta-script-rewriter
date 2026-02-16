@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Script Rewriter{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1>📊 Dashboard</h1>
+        <p class="subtitle">Overview of your script generation activity</p>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">🎬</div>
+            <div class="stat-content">
+                <h3>{{ stats.total_scripts }}</h3>
+                <p>Total Scripts</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">📹</div>
+            <div class="stat-content">
+                <h3>{{ stats.total_videos }}</h3>
+                <p>Videos Processed</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">📱</div>
+            <div class="stat-content">
+                <h3>{{ stats.instagram_count }}</h3>
+                <p>Instagram Links</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">📂</div>
+            <div class="stat-content">
+                <h3>{{ stats.upload_count }}</h3>
+                <p>File Uploads</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <a href="{{ url_for('index') }}" class="action-btn primary">
+                <span class="btn-icon">✨</span>
+                <span class="btn-content">
+                    <strong>Generate New Script</strong>
+                    <small>Upload video or Instagram link</small>
+                </span>
+            </a>
+            <a href="{{ url_for('history') }}" class="action-btn">
+                <span class="btn-icon">📜</span>
+                <span class="btn-content">
+                    <strong>View History</strong>
+                    <small>Browse previous scripts</small>
+                </span>
+            </a>
+            <a href="{{ url_for('analytics') }}" class="action-btn">
+                <span class="btn-icon">📈</span>
+                <span class="btn-content">
+                    <strong>View Analytics</strong>
+                    <small>See detailed statistics</small>
+                </span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-section">
+        <h2>Recent Scripts</h2>
+        {% if recent_scripts %}
+        <div class="recent-list">
+            {% for script in recent_scripts[:5] %}
+            <div class="recent-item">
+                <div class="recent-icon">
+                    {% if script.source_type == 'instagram' %}📱{% else %}📂{% endif %}
+                </div>
+                <div class="recent-content">
+                    <h4>Script from {{ script.timestamp[:10] }}</h4>
+                    <p>{{ script.brand_input[:60] }}...</p>
+                </div>
+                <a href="{{ url_for('view_script', script_id=script.id) }}" class="recent-link">View →</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No scripts generated yet. <a href="{{ url_for('index') }}">Create your first one!</a></p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Video Script Rewriter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Instagram Script Rewriter</h1>
+            <p class="subtitle">Transform Instagram videos into custom scripts for your brand</p>
+        </header>
+
+        <main>
+            <div class="upload-section">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="instagram_url">
+                            <span class="label-text">📱 Instagram Link (Recommended)</span>
+                            <span class="label-hint">Paste Instagram post or reel URL</span>
+                        </label>
+                        <input 
+                            type="url" 
+                            id="instagram_url" 
+                            name="instagram_url" 
+                            placeholder="https://www.instagram.com/reel/..."
+                            class="url-input"
+                        >
+                    </div>
+
+                    <div class="separator">
+                        <span class="separator-text">OR</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="video">
+                            <span class="label-text">📂 Upload Video File</span>
+                            <span class="label-hint">MP4, MOV, AVI, MKV, or WEBM (max 100MB)</span>
+                        </label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="video" name="video" accept="video/*">
+                            <div class="file-input-display">
+                                <span class="file-icon">📁</span>
+                                <span class="file-text">Choose a video file...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brand_input">
+                            <span class="label-text">Your Brand Information</span>
+                            <span class="label-hint">Enter website URL to auto-fill or write brand description manually</span>
+                        </label>
+                        <div class="brand-input-wrapper">
+                            <input 
+                                type="url" 
+                                id="website_url" 
+                                class="url-input" 
+                                placeholder="https://mycompany.com (auto-scrape content)"
+                            >
+                            <button type="button" class="btn-scrape" id="scrapeBtn">
+                                <span id="scrapeBtnText">🔍 Auto-Fill from Website</span>
+                            </button>
+                        </div>
+                        <textarea 
+                            id="brand_input" 
+                            name="brand_input" 
+                            rows="6" 
+                            placeholder="Brand info will appear here after scraping, or type your brand description manually..."
+                            required
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="submitBtn">
+                        <span class="btn-text">Analyze & Generate Script</span>
+                        <span class="btn-icon">✨</span>
+                    </button>
+                </form>
+            </div>
+
+            <div id="loadingSection" class="loading-section hidden">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Processing your video...</p>
+                <p class="loading-subtext">This may take 1-2 minutes</p>
+            </div>
+
+            <div id="errorSection" class="error-section hidden">
+                <div class="error-icon">⚠️</div>
+                <p class="error-text"></p>
+            </div>
+
+            <div id="resultsSection" class="results-section hidden">
+                <div class="result-card">
+                    <h2>📝 Original Transcription</h2>
+                    <div class="result-content" id="transcriptionContent"></div>
+                </div>
+
+                <div class="result-card">
+                    <h2>🎯 Video Style Analysis</h2>
+                    <div class="result-content" id="styleContent"></div>
+                </div>
+
+                <div class="result-card highlight">
+                    <h2>✨ Your Custom Script</h2>
+                    <div class="result-content" id="scriptContent"></div>
+                    <button class="btn-secondary" id="copyBtn">
+                        <span>📋 Copy Script</span>
+                    </button>
+                </div>
+
+                <button class="btn-primary" id="resetBtn">
+                    <span>🔄 Create Another Script</span>
+                </button>
+            </div>
+        </main>
+
+        <footer>
+            <p>Powered by Groq AI • Whisper + LLaMA 3.3</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
