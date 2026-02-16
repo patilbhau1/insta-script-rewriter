@@ -1335,11 +1335,18 @@ def api_transcribe():
             }), 400
         
         # Download video
-        video_path, video_info = download_instagram_video(instagram_url)
+        try:
+            video_path = download_instagram_video(instagram_url)
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': f'Failed to download video: {str(e)}'
+            }), 400
+        
         if not video_path:
             return jsonify({
                 'success': False,
-                'error': f'Failed to download video: {video_info}'
+                'error': 'Failed to download video'
             }), 400
         
         audio_path = None
@@ -1365,8 +1372,7 @@ def api_transcribe():
                 'success': True,
                 'transcription': transcription,
                 'video_info': {
-                    'title': video_info.get('title', 'Instagram Video'),
-                    'duration': video_info.get('duration', 0),
+                    'title': 'Instagram Video',
                     'url': instagram_url
                 }
             })
