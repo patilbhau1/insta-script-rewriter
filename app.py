@@ -1504,26 +1504,6 @@ def cleanup_uploads():
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/api/clear-history', methods=['POST'])
-def clear_history():
-    """Clear all script history for current user."""
-    try:
-        user = get_current_user()
-        scripts = get_all_scripts(user['id'])
-        
-        deleted_count = 0
-        for script in scripts:
-            if delete_script(script['id']):
-                deleted_count += 1
-        
-        return jsonify({
-            'success': True,
-            'deleted_scripts': deleted_count
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('FLASK_DEBUG', 'true').lower() == 'true'
