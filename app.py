@@ -1156,10 +1156,13 @@ def import_data():
 def process_video():
     """Process uploaded video and generate rewritten script."""
     try:
-        # Get brand input
+        # Get process mode (transcription or full)
+        process_mode = request.form.get('process_mode', 'transcription').strip()
+        
+        # Get brand input (only required for full process)
         brand_input = request.form.get('brand_input', '').strip()
-        if not brand_input:
-            return jsonify({'error': 'Please provide website URL or brand introduction'}), 400
+        if process_mode == 'full' and not brand_input:
+            return jsonify({'error': 'Please provide website URL or brand introduction for full process'}), 400
         
         # Check if Instagram URL is provided
         instagram_url = request.form.get('instagram_url', '').strip()
@@ -1200,9 +1203,6 @@ def process_video():
             # Step 2: Transcribe audio
             transcription = transcribe_audio(audio_path)
             
-            # Step 3: Analyze and rewrite script
-            result = analyze_and_rewrite_script(transcription, brand_input)
-            
             # Clean up files
             if os.path.exists(video_path):
                 os.remove(video_path)
@@ -1211,6 +1211,29 @@ def process_video():
             
             # Get current user
             user = get_current_user()
+            
+            # If transcription-only mode, return just the transcription
+            if process_mode == 'transcription':
+                # Save to history (transcription only)
+                script_data = {
+                    'source_type': 'instagram' if instagram_url else 'upload',
+                    'source': instagram_url if instagram_url else video_file.filename if 'video_file' in locals() else '',
+                    'brand_input': '',
+                    'transcription': transcription,
+                    'style_analysis': '',
+                    'rewritten_script': ''
+                }
+                script_id = save_script_result(script_data, user['id'])
+                
+                return jsonify({
+                    'success': True,
+                    'mode': 'transcription',
+                    'script_id': script_id,
+                    'transcription': transcription
+                })
+            
+            # Full process: Step 3: Analyze and rewrite script
+            result = analyze_and_rewrite_script(transcription, brand_input)
             
             # Save to history
             script_data = {
@@ -1225,6 +1248,7 @@ def process_video():
             
             return jsonify({
                 'success': True,
+                'mode': 'full',
                 'script_id': script_id,
                 'transcription': transcription,
                 'style_analysis': result['style_analysis'],

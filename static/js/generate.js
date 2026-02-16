@@ -18,12 +18,38 @@ const styleContent = document.getElementById('styleContent');
 const scriptContent = document.getElementById('scriptContent');
 
 const copyBtn = document.getElementById('copyBtn');
+const copyTranscriptionBtn = document.getElementById('copyTranscriptionBtn');
 const resetBtn = document.getElementById('resetBtn');
 
 const websiteUrlInput = document.getElementById('website_url');
 const scrapeBtn = document.getElementById('scrapeBtn');
 const scrapeBtnText = document.getElementById('scrapeBtnText');
 const brandInput = document.getElementById('brand_input');
+const brandSection = document.getElementById('brandSection');
+const fullProcessResults = document.getElementById('fullProcessResults');
+const submitBtnText = document.getElementById('submitBtnText');
+
+// Mode handling
+const modeRadios = document.querySelectorAll('input[name="process_mode"]');
+let currentMode = 'transcription';
+
+// Update UI based on selected mode
+function updateModeUI() {
+    currentMode = document.querySelector('input[name="process_mode"]:checked').value;
+    
+    if (currentMode === 'full') {
+        brandSection.style.display = 'block';
+        submitBtnText.textContent = '✨ Analyze & Generate Script';
+    } else {
+        brandSection.style.display = 'none';
+        submitBtnText.textContent = '📝 Get Transcription';
+    }
+}
+
+// Listen for mode changes
+modeRadios.forEach(radio => {
+    radio.addEventListener('change', updateModeUI);
+});
 
 // Progress tracking
 let currentStep = 0;
@@ -162,9 +188,10 @@ uploadForm.addEventListener('submit', async (e) => {
         formData.append('video', videoInput.files[0]);
     }
     formData.append('brand_input', brandInput.value);
+    formData.append('process_mode', currentMode);
     
     // Simulate progress (since we don't have real WebSocket yet)
-    simulateProgress();
+    simulateProgress(currentMode);
     
     try {
         const response = await fetch('/process', {
@@ -192,7 +219,7 @@ uploadForm.addEventListener('submit', async (e) => {
     }
 });
 
-function simulateProgress() {
+function simulateProgress(mode) {
     updateProgress(1, 'active', 'Downloading...');
     
     setTimeout(() => {
@@ -205,6 +232,12 @@ function simulateProgress() {
         updateProgress(3, 'active', 'Transcribing with Whisper...');
     }, 5000);
     
+    // For transcription-only mode, stop here
+    if (mode === 'transcription') {
+        return;
+    }
+    
+    // Full process continues with analysis
     setTimeout(() => {
         updateProgress(3, 'completed');
         updateProgress(4, 'active', 'Analyzing video style...');
@@ -218,13 +251,22 @@ function simulateProgress() {
 
 function displayResults(data) {
     transcriptionContent.textContent = data.transcription;
-    styleContent.textContent = data.style_analysis;
-    scriptContent.textContent = data.rewritten_script;
+    
+    // Check if this is transcription-only mode
+    if (data.mode === 'transcription') {
+        // Hide full process results
+        fullProcessResults.style.display = 'none';
+        showToast('Transcription completed!', 'success');
+    } else {
+        // Show full process results
+        fullProcessResults.style.display = 'block';
+        styleContent.textContent = data.style_analysis;
+        scriptContent.textContent = data.rewritten_script;
+        showToast('Script generated successfully!', 'success');
+    }
     
     resultsSection.classList.remove('hidden');
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    
-    showToast('Script generated successfully!', 'success');
 }
 
 function showError(message) {
@@ -240,6 +282,7 @@ function hideAllSections() {
     resultsSection.classList.add('hidden');
 }
 
+// Copy script button
 copyBtn.addEventListener('click', async () => {
     const scriptText = scriptContent.textContent;
     const success = await copyToClipboard(scriptText);
@@ -253,6 +296,25 @@ copyBtn.addEventListener('click', async () => {
             copyBtn.innerHTML = '<span>📋 Copy Script</span>';
             copyBtn.style.background = '';
             copyBtn.style.color = '';
+        }, 2000);
+    }
+});
+
+// Copy transcription button
+copyTranscriptionBtn.addEventListener('click', async () => {
+    const transcriptionText = transcriptionContent.textContent;
+    const success = await copyToClipboard(transcriptionText);
+    
+    if (success) {
+        copyTranscriptionBtn.innerHTML = '<span>✓ Copied!</span>';
+        copyTranscriptionBtn.style.background = '#10b981';
+        copyTranscriptionBtn.style.color = 'white';
+        showToast('Transcription copied to clipboard!', 'success');
+        
+        setTimeout(() => {
+            copyTranscriptionBtn.innerHTML = '<span>📋 Copy Transcription</span>';
+            copyTranscriptionBtn.style.background = '';
+            copyTranscriptionBtn.style.color = '';
         }, 2000);
     }
 });
