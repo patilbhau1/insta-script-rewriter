@@ -1292,6 +1292,119 @@ def format_size(size_bytes):
         return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
+# ==================== PUBLIC TRANSCRIPTION API ====================
+
+@app.route('/api/transcribe', methods=['POST'])
+def api_transcribe():
+    """
+    Public API endpoint to transcribe Instagram videos.
+    
+    Request JSON:
+    {
+        "url": "https://www.instagram.com/reel/ABC123/"
+    }
+    
+    Response JSON:
+    {
+        "success": true,
+        "transcription": "The video transcript text...",
+        "video_info": {...}
+    }
+    """
+    try:
+        # Get JSON data
+        data = request.get_json()
+        if not data or 'url' not in data:
+            return jsonify({
+                'success': False,
+                'error': 'Missing required field: url',
+                'usage': {
+                    'method': 'POST',
+                    'content_type': 'application/json',
+                    'body': {'url': 'https://www.instagram.com/reel/ABC123/'}
+                }
+            }), 400
+        
+        instagram_url = data['url'].strip()
+        
+        # Validate Instagram URL
+        if not instagram_url or 'instagram.com' not in instagram_url:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid Instagram URL. Must be a valid instagram.com URL.'
+            }), 400
+        
+        # Download video
+        video_path, video_info = download_instagram_video(instagram_url)
+        if not video_path:
+            return jsonify({
+                'success': False,
+                'error': f'Failed to download video: {video_info}'
+            }), 400
+        
+        audio_path = None
+        try:
+            # Extract audio
+            audio_path = extract_audio(video_path)
+            if not audio_path:
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to extract audio from video'
+                }), 500
+            
+            # Transcribe audio
+            transcription = transcribe_audio(audio_path)
+            if not transcription:
+                return jsonify({
+                    'success': False,
+                    'error': 'Failed to transcribe audio. Video may have no speech.'
+                }), 500
+            
+            # Return successful response
+            return jsonify({
+                'success': True,
+                'transcription': transcription,
+                'video_info': {
+                    'title': video_info.get('title', 'Instagram Video'),
+                    'duration': video_info.get('duration', 0),
+                    'url': instagram_url
+                }
+            })
+            
+        finally:
+            # Cleanup files
+            if video_path and os.path.exists(video_path):
+                os.remove(video_path)
+            if audio_path and os.path.exists(audio_path):
+                os.remove(audio_path)
+                
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/transcribe', methods=['GET'])
+def api_transcribe_info():
+    """Show API usage info."""
+    return jsonify({
+        'api': 'Instagram Video Transcription API',
+        'version': '1.0',
+        'usage': {
+            'method': 'POST',
+            'endpoint': '/api/transcribe',
+            'content_type': 'application/json',
+            'body': {
+                'url': 'https://www.instagram.com/reel/ABC123/'
+            }
+        },
+        'example_curl': "curl -X POST -H 'Content-Type: application/json' -d '{\"url\": \"YOUR_INSTAGRAM_URL\"}' https://YOUR_DOMAIN/api/transcribe"
+    })
+
+
+# ==================== STORAGE & CLEANUP ENDPOINTS ====================
+
 @app.route('/api/storage-info')
 def storage_info():
     """Get storage usage information."""
