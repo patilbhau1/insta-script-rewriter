@@ -1243,6 +1243,150 @@ def process_video():
         return jsonify({'error': str(e)}), 500
 
 
+# ==================== CLEANUP & STORAGE ROUTES ====================
+
+def get_folder_size(folder_path):
+    """Get total size of a folder in bytes."""
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        for filename in filenames:
+            filepath = os.path.join(dirpath, filename)
+            if os.path.exists(filepath):
+                total_size += os.path.getsize(filepath)
+    return total_size
+
+
+def format_size(size_bytes):
+    """Format bytes to human readable string."""
+    if size_bytes < 1024:
+        return f"{size_bytes} B"
+    elif size_bytes < 1024 * 1024:
+        return f"{size_bytes / 1024:.1f} KB"
+    elif size_bytes < 1024 * 1024 * 1024:
+        return f"{size_bytes / (1024 * 1024):.1f} MB"
+    else:
+        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+
+@app.route('/api/storage-info')
+def storage_info():
+    """Get storage usage information."""
+    try:
+        uploads_folder = app.config['UPLOAD_FOLDER']
+        
+        # Count files and calculate size
+        video_extensions = {'.mp4', '.mov', '.avi', '.mkv', '.webm'}
+        audio_extensions = {'.mp3', '.wav', '.m4a'}
+        
+        video_count = 0
+        audio_count = 0
+        video_size = 0
+        audio_size = 0
+        other_count = 0
+        other_size = 0
+        
+        if os.path.exists(uploads_folder):
+            for filename in os.listdir(uploads_folder):
+                filepath = os.path.join(uploads_folder, filename)
+                if os.path.isfile(filepath):
+                    file_size = os.path.getsize(filepath)
+                    ext = os.path.splitext(filename)[1].lower()
+                    
+                    if ext in video_extensions:
+                        video_count += 1
+                        video_size += file_size
+                    elif ext in audio_extensions:
+                        audio_count += 1
+                        audio_size += file_size
+                    elif filename != '.gitkeep':
+                        other_count += 1
+                        other_size += file_size
+        
+        total_size = video_size + audio_size + other_size
+        total_count = video_count + audio_count + other_count
+        
+        return jsonify({
+            'success': True,
+            'storage': {
+                'total_files': total_count,
+                'total_size': total_size,
+                'total_size_formatted': format_size(total_size),
+                'videos': {
+                    'count': video_count,
+                    'size': video_size,
+                    'size_formatted': format_size(video_size)
+                },
+                'audio': {
+                    'count': audio_count,
+                    'size': audio_size,
+                    'size_formatted': format_size(audio_size)
+                },
+                'other': {
+                    'count': other_count,
+                    'size': other_size,
+                    'size_formatted': format_size(other_size)
+                }
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/cleanup', methods=['POST'])
+def cleanup_uploads():
+    """Delete all files in uploads folder (keeps scripts in history)."""
+    try:
+        uploads_folder = app.config['UPLOAD_FOLDER']
+        deleted_count = 0
+        deleted_size = 0
+        errors = []
+        
+        if os.path.exists(uploads_folder):
+            for filename in os.listdir(uploads_folder):
+                if filename == '.gitkeep':
+                    continue  # Keep .gitkeep file
+                    
+                filepath = os.path.join(uploads_folder, filename)
+                if os.path.isfile(filepath):
+                    try:
+                        file_size = os.path.getsize(filepath)
+                        os.remove(filepath)
+                        deleted_count += 1
+                        deleted_size += file_size
+                    except Exception as e:
+                        errors.append(f"Failed to delete {filename}: {str(e)}")
+        
+        return jsonify({
+            'success': True,
+            'deleted_files': deleted_count,
+            'freed_space': deleted_size,
+            'freed_space_formatted': format_size(deleted_size),
+            'errors': errors if errors else None
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/clear-history', methods=['POST'])
+def clear_history():
+    """Clear all script history for current user."""
+    try:
+        user = get_current_user()
+        scripts = get_all_scripts(user['id'])
+        
+        deleted_count = 0
+        for script in scripts:
+            if delete_script(script['id']):
+                deleted_count += 1
+        
+        return jsonify({
+            'success': True,
+            'deleted_scripts': deleted_count
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('FLASK_DEBUG', 'true').lower() == 'true'

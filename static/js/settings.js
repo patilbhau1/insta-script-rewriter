@@ -51,8 +51,72 @@ function exportData() {
         .catch(() => showToast('Failed to export data', 'error'));
 }
 
+// Load storage info
+function loadStorageInfo() {
+    const container = document.getElementById('storageInfo');
+    if (!container) return;
+    
+    fetch('/api/storage-info')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const storage = data.storage;
+                container.innerHTML = `
+                    <div class="storage-stats">
+                        <div class="storage-stat">
+                            <span class="stat-label">📁 Total Files:</span>
+                            <span class="stat-value">${storage.total_files}</span>
+                        </div>
+                        <div class="storage-stat">
+                            <span class="stat-label">💽 Total Size:</span>
+                            <span class="stat-value">${storage.total_size_formatted}</span>
+                        </div>
+                        <div class="storage-stat">
+                            <span class="stat-label">🎬 Videos:</span>
+                            <span class="stat-value">${storage.videos.count} (${storage.videos.size_formatted})</span>
+                        </div>
+                        <div class="storage-stat">
+                            <span class="stat-label">🎵 Audio:</span>
+                            <span class="stat-value">${storage.audio.count} (${storage.audio.size_formatted})</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '<div class="storage-error">Failed to load storage info</div>';
+            }
+        })
+        .catch(() => {
+            container.innerHTML = '<div class="storage-error">Error loading storage info</div>';
+        });
+}
+
+// Cleanup uploaded videos
+function cleanupUploads() {
+    if (!confirm('This will delete all uploaded video and audio files. Your script history will be preserved. Continue?')) {
+        return;
+    }
+    
+    fetch('/api/cleanup', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(`Cleanup complete! Deleted ${data.deleted_files} files, freed ${data.freed_space_formatted}`, 'success');
+                loadStorageInfo(); // Refresh storage info
+            } else {
+                showToast(data.error || 'Cleanup failed', 'error');
+            }
+        })
+        .catch(() => {
+            showToast('Error during cleanup', 'error');
+        });
+}
+
 // Load saved settings on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Load storage info
+    loadStorageInfo();
+    
+    // Load saved settings
     const saved = localStorage.getItem('appSettings');
     if (saved) {
         const settings = JSON.parse(saved);

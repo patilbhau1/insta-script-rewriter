@@ -1190,3 +1190,73 @@ main .form-group .url-input:focus {
         padding: 0.4rem 0.8rem;
     }
 }
+
+/* Storage Info Styles */
+.storage-info {
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+}
+
+.storage-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.storage-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 6px;
+}
+
+.stat-label {
+    color: #94a3b8;
+    font-size: 0.875rem;
+}
+
+.stat-value {
+    color: #e2e8f0;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.storage-loading {
+    color: #94a3b8;
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+}
+
+.storage-error {
+    color: #f87171;
+    text-align: center;
+    padding: 1rem;
+}
+
+/* Warning button style */
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .storage-stats {
+        grid-template-columns: 1fr;
+    }
+}

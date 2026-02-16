@@ -80,6 +80,24 @@
         </div>
     </div>
 
+    <!-- Storage & Cleanup -->
+    <div class="settings-section">
+        <h2>💾 Storage & Cleanup</h2>
+        <div class="settings-card">
+            <div class="setting-item">
+                <label>Storage Usage</label>
+                <div id="storageInfo" class="storage-info">
+                    <div class="storage-loading">Loading storage info...</div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label>Cleanup Videos</label>
+                <button class="btn-warning" onclick="cleanupUploads()">🗑️ Delete All Uploaded Videos</button>
+                <p class="setting-help">Deletes video files but keeps your script history</p>
+            </div>
+        </div>
+    </div>
+
     <!-- History Settings -->
     <div class="settings-section">
         <h2>📜 History & Data</h2>
@@ -102,7 +120,7 @@
                 <p class="setting-help">How many scripts to keep in history</p>
             </div>
             <div class="setting-item">
-                <button class="btn-danger" onclick="clearHistory()">Clear All History</button>
+                <button class="btn-danger" onclick="clearHistory()">🗑️ Clear All History</button>
                 <p class="setting-help">⚠️ This action cannot be undone</p>
             </div>
         </div>
